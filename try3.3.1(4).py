@@ -10,7 +10,7 @@ import operator
 import knn
 
 batch_size = 100
-# MNIST dataset
+# MNIST  dataset
 train_dataset = dsets.MNIST(root = './ml/pymnist', #选择数据的根目录
                             train = True, #选择训练集
                             transform = None, #不考虑使用任何数据预处理

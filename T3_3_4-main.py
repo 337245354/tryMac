@@ -4,7 +4,7 @@ import torchvision.datasets as dsets
 import matplotlib.pyplot as plt
 import knn
 import numpy as np
-import try3_4
+import T3_4
 
 batch_size = 100
 #Cifar10 dataset
@@ -82,7 +82,7 @@ if __name__ == '__main__':
             y = np.concatenate(y) #对label进行同样的操作
             test_x = X_train_folds[i] #单独拿出验证集
             test_y = y_train_folds[i]
-            classifier = try3_4.Knn() #定义model
+            classifier = T3_4.Knn() #定义model
             classifier.fit(x, y) #读入训练集
             #dist = classifier.compute_distances_no_loops(test_x)
             #计算距离矩阵

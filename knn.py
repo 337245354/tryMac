@@ -6,6 +6,7 @@ def createDataSet():
     group = np.array([[1.0,2.0],[1.2,0.1],[0.1,1.4],[0.3,3.5],[1.1,1.0],[0.5,1.5]])
     labels = np.array(['A','A','B','B','A','B'])
     return group,labels
+
 if __name__=='__main__':
     group,labels = createDataSet()
     plt.scatter(group[labels=='A',0],group[labels=='A',1],color = 'r', marker='*')
@@ -31,12 +32,12 @@ def kNN_classify(k,dis,X_train,x_train,Y_test):
             sortedClassCount = sorted(classCount.items(),key=operator.itemgetter(1),reverse=True)
             labellist.append(sortedClassCount[0][0])
         return np.array(labellist)
+    ''' 使用曼哈顿公式作为距离度量'''
     if (dis == 'M'):
         for i in range(num_test):
-        #实现欧式距离公式
-            distances = np.sum(np.abs(X_train - np.tile(Y_test[i], (X_train.shape[0], 1))))
+            distances = np.sum(np.abs(X_train - np.tile(Y_test[i], (X_train.shape[0], 1))),axis=1)
             nearest_k = np.argsort(distances) #距离由小到大进行排序，并返回index值
-            topK = nearest_k[:k] #选取前k个距离⌥
+            topK = nearest_k[:k] #选取前k个距离
             classCount = {}
             for i in topK: #统计每个类别的个数
                 classCount[x_train[i]] = classCount.get(x_train[i],0) + 1
@@ -47,5 +48,5 @@ def kNN_classify(k,dis,X_train,x_train,Y_test):
 #读者自行补充完成
 if __name__ == '__main__':
     group, labels = createDataSet()
-    y_test_pred = kNN_classify(1, 'E', group, labels, np.array([[1.0,2.1],[0.4,2.0]]))
-    print(y_test_pred) #打印输出['A' 'B']
+    y_test_pred = kNN_classify(1, 'M', group, labels, np.array([[1.0,2.1],[0.4,2.0],[0.4,1.4]]))
+    print(y_test_pred) #打印输出['A' 'A' 'B']

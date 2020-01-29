@@ -70,7 +70,7 @@ if __name__ == '__main__':
     indices = np.array_split(np.arange(num_training), indices_or_sections=num_folds) #把下标分成5个部分
     for i in indices:
         X_train_folds.append(X_train[i])
-    y_train_folds.append(y_train[i])
+        y_train_folds.append(y_train[i])
     k_to_accuracies = {}
     for k in k_choices:
         #进行交叉验证
@@ -94,4 +94,20 @@ if __name__ == '__main__':
     for k in sorted(k_to_accuracies):
         for accuracy in k_to_accuracies[k]:
             print('k = %d, accuracy = %f' % (k, accuracy))
+
+    # 使用下面的代码图形化展示k的选取与准确度趋势
+    # plot the raw observations
+    import matplotlib.pyplot as plt
+
+    for k in k_choices:
+        accuracies = k_to_accuracies[k]
+        plt.scatter([k] * len(accuracies), accuracies)
+    # plot the trend line with error bars that correspond to standard deviation
+    accuracies_mean = np.array([np.mean(v) for k, v in sorted(k_to_accuracies.items())])
+    accuracies_std = np.array([np.std(v) for k, v in sorted(k_to_accuracies.items())])
+    plt.errorbar(k_choices, accuracies_mean, yerr=accuracies_std)
+    plt.title('Cross-validation on k')
+    plt.xlabel('k')
+    plt.ylabel('Cross-validation accuracy')
+    plt.show()
 

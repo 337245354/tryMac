@@ -1,15 +1,11 @@
-import matplotlib
 import torch
 from torch.utils.data import DataLoader
 import torchvision.datasets as dsets
-import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.pyplot as plt
 import operator
-import knn
 
-class self:
+
+class selfA:
     def __init__(self, X_train, y_train):
         self.Xtr = X_train
         self.ytr = y_train
@@ -57,8 +53,8 @@ test_loader = torch.utils.data.DataLoader(dataset = dsets.MNIST(train = False),
 
 
 if __name__ == '__main__':
-    fit(self,train_loader,test_loader)
-    predict(self,1,'E',test_loader)
+    fit(selfA, train_loader, test_loader)
+    predict(selfA, 1, 'E', test_loader)
 
     #
     # X_train = train_loader.dataset.train_data.numpy() #需要转为numpy矩阵

@@ -1,13 +1,8 @@
-import matplotlib
 import torch
 from torch.utils.data import DataLoader
 import torchvision.datasets as dsets
-import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib.pyplot as plt
-import operator
-import knn
+from Try import knn
 
 batch_size = 100
 # MNIST  dataset

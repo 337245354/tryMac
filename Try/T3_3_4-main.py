@@ -1,10 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 import torchvision.datasets as dsets
-import matplotlib.pyplot as plt
-import knn
 import numpy as np
-import T3_4
+from Try import T3_4
 
 batch_size = 100
 #Cifar10 dataset

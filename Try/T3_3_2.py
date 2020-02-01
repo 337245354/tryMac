@@ -1,8 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import torchvision.datasets as dsets
-import matplotlib.pyplot as plt
-import knn
+from Try import knn
 import numpy as np
 
 batch_size = 100

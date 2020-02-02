@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import datasets
 from collections import Counter
 
+
 class LogisticRegression:
     def __init__(self):
         """初始化Logistic regression模型"""
@@ -27,7 +28,7 @@ class LogisticRegression:
             except:
                 return float('inf')
 
-        # 求sigmoid梯度的导数
+        # 求sigmoid梯度(cost函数)的导数
         def dJ(theta, X_b, y):
             x = self._sigmoid(X_b.dot(theta))
             return X_b.T.dot(x - y) / len(X_b)
@@ -44,13 +45,13 @@ class LogisticRegression:
                 if (abs(J(theta, X_b, y) - J(last_theta, X_b, y)) < epsilon):
                     break
             return theta
+
         X_b = np.hstack([np.ones((len(X_train), 1)), X_train])
         initial_theta = np.zeros(X_b.shape[1])  # 列向量
         self._theta = gradient_descent(X_b, y_train, initial_theta, eta, n_iters)
         self.intercept_ = self._theta[0]  # 截距
         self.coef_ = self._theta[1:]  # 维度
         return self
-
 
     def predict_proba(self, X_predict):
         X_b = np.hstack([np.ones((len(X_predict), 1)), X_predict])
@@ -68,10 +69,7 @@ class LogisticRegression:
         return a
 
 
-
 if __name__ == '__main__':
-
-
     iris = datasets.load_iris()
     X = iris['data']
     y = iris['target']

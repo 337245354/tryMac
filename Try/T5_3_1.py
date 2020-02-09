@@ -32,9 +32,11 @@ def forward(network,x):
     w1,w2,w3 = network['W1'],network['W2'],network['W3']
     b1,b2,b3 = network['b1'],network['b2'],network['b3']
     a1 = x.dot(w1) + b1
-    z1 = _relu(a1)
+    # z1 = _relu(a1)
+    z1 = _softmax(a1)
     a2 = z1.dot(w2) + b2
-    z2 = _relu(a2)
+    # z2 = _relu(a2)
+    z2 = _softmax(a2)
     a3 = z2.dot(w3) + b3
     y = a3
     return y
@@ -42,15 +44,26 @@ def forward(network,x):
 def _relu(x):
     return np.maximum(0,x)
 
+def _softmax(x):
+    if x.ndim == 2:
+        c = np.max(x,axis=1)
+        x = x.T - c #溢出对策
+        y = np.exp(x) / np.sum(np.exp(x),axis=0)
+        return y.T
+    c = np.max(x)
+    exp_x = np.exp(x-c)
+    return exp_x / np.sum(exp_x)
+
 
 if __name__ == '__main__':
     network = init_network()
     accuracy_cnt = 0
+    batch_size = 100
     x = test_dataset.test_data.numpy().reshape(-1, 28 * 28)
-    labels = test_dataset.test_labels.numpy() #tensor转numpy
-    for i in range(len(x)):
-        y = forward(network, x[i])
-        p = np.argmax(y) #获取概率最高的元素的索引
-        if p == labels[i]:
-            accuracy_cnt += 1
+    labels = test_dataset.test_labels.numpy()
+    for i in range(0, len(x), batch_size):
+        x_batch = x[i:i + batch_size]
+        y_batch = forward(network, x_batch)
+        p = np.argmax(y_batch, axis=1)
+        accuracy_cnt += np.sum(p == labels[i:i + batch_size])
     print("Accuracy:" + str(float(accuracy_cnt) / len(x) * 100) + "%")

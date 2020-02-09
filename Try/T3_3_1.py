@@ -36,11 +36,11 @@ def predict(self,k, dis, X_test):
 
 # #加载数据
 batch_size = 100
-# train_dataset = dsets.MNIST(root = './ml/pymnist', #选择数据的根目录
+# train_dataset = dsets.MNIST(root = '../ml/pymnist', #选择数据的根目录
 #                             train = True, #选择训练集
 #                             transform = None, #不考虑使用任何数据预处理
 #                             download = True) #从网络上下载图片
-# test_dataset = dsets.MNIST(root = './ml/pymnist', #选择数据的根目录
+# test_dataset = dsets.MNIST(root = '../ml/pymnist', #选择数据的根目录
 #                            train = False, #选择测试集
 #                            transform = None, #不考虑使用任何数据预处理
 #                            download = True) #从网络上下载图片

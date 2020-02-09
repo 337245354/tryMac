@@ -89,7 +89,7 @@ class LinearLogsiticRegression(object):
         return a
 
 
-# if __name__=="main":
+# if __name__ == '__main__':
 from sklearn.model_selection import train_test_split
 
 iris = datasets.load_iris()

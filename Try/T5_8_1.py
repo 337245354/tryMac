@@ -108,20 +108,22 @@ if __name__ == '__main__':
     y_test = torch.zeros(y_test_tmp.shape[0], 10).scatter_(1, y_test_tmp, 1).numpy()
 
     # 超参数
-    iters_num = 1000  # 适当设定循环的次数
+    iters_num = 600  # 适当设定循环的次数
     train_size = x_train.shape[0]
+    epoch = 5
     batch_size = 100
     learning_rate = 0.001
     network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
-    for i in range(iters_num):
-        batch_mask = np.random.choice(train_size, batch_size)
-        x_batch = x_train[batch_mask]
-        y_batch = y_train[batch_mask]
-        grad = network.numerical_gradient(x_batch, y_batch)
-        for key in ('W1', 'b1', 'W2', 'b2'):
-            network.params[key] -= learning_rate * grad[key]
-        # 记录学习过程
-        loss = network.loss(x_batch, y_batch)
-        if i % 5 == 0:
-            print(loss)
-            print(network.accuracy(x_test, y_test))
+    for i in range(epoch):
+        print('current epoch is :', i)
+        for num in range(iters_num):
+            batch_mask = np.random.choice(train_size, batch_size)
+            x_batch = x_train[batch_mask]
+            y_batch = y_train[batch_mask]
+            grad = network.numerical_gradient(x_batch, y_batch)
+            for key in ('W1', 'b1', 'W2', 'b2'):
+                network.params[key] -= learning_rate * grad[key]
+            loss = network.loss(x_batch, y_batch)
+            if num % 5 == 0:
+                print(loss)
+    print(network.accuracy(x_test, y_test))

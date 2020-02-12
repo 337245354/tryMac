@@ -23,10 +23,10 @@ class TwoLayerNet:
         # input_size代表输入的神经元个数； hidden_size代表隐藏层神经元的个数；output_size代表输出层神经元的个数；
         # 初始化权重
         self.params = {}
-        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)
-        self.params['b1'] = np.zeros(hidden_size)
-        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, output_size)
-        self.params['b2'] = np.zeros(output_size)
+        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)          # 784 * 50 ,
+        self.params['b1'] = np.zeros(hidden_size)                                               # 50
+        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, output_size)         # 50 * 10 ,
+        self.params['b2'] = np.zeros(output_size)                                               # 10
 
     def loss(self, x, y):
         p = self.predict(x)
@@ -74,6 +74,7 @@ def _softmax(x):
     return exp_x / np.sum(exp_x)
 
 
+# 计算基于小批次的损失函数的损失值
 def cross_entropy_error(p, y):  # y代表真实值，p代表预测值
     delta = 1e-7
     batch_size = p.shape[0]
@@ -121,6 +122,6 @@ if __name__ == '__main__':
             network.params[key] -= learning_rate * grad[key]
         # 记录学习过程
         loss = network.loss(x_batch, y_batch)
-        if i % 100 == 0:
+        if i % 5 == 0:
             print(loss)
             print(network.accuracy(x_test, y_test))

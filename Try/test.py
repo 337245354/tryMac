@@ -15,3 +15,10 @@ it = np.nditer(arr1, flags=['multi_index'],op_flags=['readwrite'])
 while not it.finished:
     print(it.multi_index)
     it.iternext()
+
+    # (0, 0)
+    # (0, 1)
+    # (0, 2)
+    # (1, 0)
+    # (1, 1)
+    # (1, 2)

@@ -1,11 +1,8 @@
 import torch
-from torch.utils.data import DataLoader
 import torchvision.datasets as dsets
 import numpy as np
-import operator
 import torchvision.transforms
 from collections import OrderedDict
-
 
 class Relu:
     def __init__(self):
@@ -19,20 +16,6 @@ class Relu:
     def backward(self, dout):
         dx = dout
         dx[self.x <= 0] = 0
-        return dx
-
-
-class _sigmoid:
-    def __init__(self):
-        self.out = None
-
-    def forward(self, x):
-        out = 1 / (1 + np.exp(-x))
-        self.out = out
-        return out
-
-    def backward(self, dout):
-        dx = dout * self.out * (1 - self.out)
         return dx
 
 
@@ -73,7 +56,6 @@ class SoftmaxWithLoss:
         dx = (self.p - self.y) / batch_size
         return dx
 
-
 def softmax(x):
     if x.ndim == 2:
         c = np.max(x, axis=1)
@@ -89,24 +71,6 @@ def cross_entropy_error(p, y):
     delta = 1e-7
     batch_size = p.shape[0]
     return -np.sum(y * np.log(p + delta)) / batch_size
-
-
-# 数值微分
-def numerical_gradient(f, x):
-    h = 1e-4  # 0.0001
-    grad = np.zeros_like(x)
-    it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
-    while not it.finished:
-        idx = it.multi_index
-        tmp_val = x[idx]
-        x[idx] = float(tmp_val) + h
-        fxh1 = f(x)  # f(x+h)
-        x[idx] = tmp_val - h
-        fxh2 = f(x)  # f(x-h)
-        grad[idx] = (fxh1 - fxh2) / (2 * h)
-        x[idx] = tmp_val  # 还原值
-        it.iternext()
-    return grad
 
 
 class TwoLayerNet:
@@ -142,15 +106,6 @@ class TwoLayerNet:
         accuracy = np.sum(p == y) / float(x.shape[0])
         return accuracy
 
-    # x:输入数据, y:监督数据
-    def numerical_gradient(self, x, y):
-        loss_W = lambda W: self.loss(x, y)
-        grads = {}
-        grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
-        grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
-        grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
-        grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
-        return grads
 
     def gradient(self, x, y):
         # forward
@@ -167,7 +122,6 @@ class TwoLayerNet:
         grads['W1'], grads['b1'] = self.layers['Affine1'].dW, self.layers['Affine1'].db
         grads['W2'], grads['b2'] = self.layers['Affine2'].dW, self.layers['Affine2'].db
         return grads
-
 
 if __name__ == '__main__':
     train_dataset = dsets.MNIST(root='../ml/pymnist',  # 选择数据的根目录
@@ -186,11 +140,22 @@ if __name__ == '__main__':
     y_test_tmp = test_dataset.test_labels.reshape(test_dataset.test_labels.shape[0], 1)
     y_test = torch.zeros(y_test_tmp.shape[0], 10).scatter_(1, y_test_tmp, 1).numpy()
 
+    train_size = x_train.shape[0]
+    iters_num = 600
+    learning_rate = 0.001
+    epoch = 5
+    batch_size = 100
     network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
-    x_batch = x_train[:100]
-    y_batch = y_train[:100]
-    grad_numerical = network.numerical_gradient(x_batch, y_batch)  # 基于数值微分
-    grad_backprop = network.gradient(x_batch, y_batch)   # 基于误差反向传播
-    for key in grad_numerical.keys():
-        diff = np.average(np.abs(grad_backprop[key] - grad_numerical[key]))
-        print(key + ":" + str(diff))
+    for i in range(epoch):
+        print('current epoch is :', i)
+        for num in range(iters_num):
+            batch_mask = np.random.choice(train_size, batch_size)
+            x_batch = x_train[batch_mask]
+            y_batch = y_train[batch_mask]
+            grad = network.gradient(x_batch, y_batch)
+            for key in ('W1', 'b1', 'W2', 'b2'):
+                network.params[key] -= learning_rate * grad[key]
+            loss = network.loss(x_batch, y_batch)
+            if num % 5 == 0:
+                print(loss)
+    print('准确率： ', network.accuracy(x_test, y_test) * 100, '%')

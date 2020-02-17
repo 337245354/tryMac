@@ -189,8 +189,8 @@ if __name__ == '__main__':
     network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
     x_batch = x_train[:100]
     y_batch = y_train[:100]
-    grad_numerical = network.numerical_gradient(x_batch, y_batch)
-    grad_backprop = network.gradient(x_batch, y_batch)
+    grad_numerical = network.numerical_gradient(x_batch, y_batch)  # 基于数值微分
+    grad_backprop = network.gradient(x_batch, y_batch)   # 基于误差反向传播
     for key in grad_numerical.keys():
         diff = np.average(np.abs(grad_backprop[key] - grad_numerical[key]))
         print(key + ":" + str(diff))

@@ -107,7 +107,7 @@ import os
 # y = net(x)
 # print(y.size())
 criterion = nn.CrossEntropyLoss()  # 定义损失函数：交叉熵
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)# 定义优化方法：随机梯度下降
+optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)  # 定义优化方法：随机梯度下降
 ########################################
 # 第4步：卷积神经网络的训练
 ########################################

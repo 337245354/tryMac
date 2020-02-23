@@ -138,14 +138,62 @@ for epoch in range(5):  # 训练数据集的迭代次数，这里Cifar10数据�
 print('Finished Training')
 
 ########################################
-# 第5步：测试
+# 第4.1步：简单测试
 ########################################
-checkpoint = torch.load('./checkpoint/cifar10_epoch_5.ckpt')  # 载入现有模型 ,目前只训练到cifar10_epoch_2.ckpt，正确率50%
+# checkpoint = torch.load('./checkpoint/cifar10_epoch_5.ckpt')  # 载入现有模型 ,目前只训练到cifar10_epoch_2.ckpt，正确率50%
+# net.load_state_dict(checkpoint['net'])
+# start_epoch = checkpoint['epoch']
+# dataiter = iter(testloader)
+# test_images, test_labels = dataiter.next()
+# outputs = net(test_images)  # 查看网络预测效果
+# _, predicted = torch.max(outputs, 1)
+# print(predicted)
+# print(test_labels)
+
+########################################
+# 第5步：批量计算整个测试集的预测效果
+########################################
+# 载入数据
+checkpoint = torch.load('./checkpoint/cifar10_epoch_2.ckpt')  # 载入现有模型 ,目前只训练到cifar10_epoch_2.ckpt，正确率60%
 net.load_state_dict(checkpoint['net'])
-start_epoch = checkpoint['epoch']
-dataiter = iter(testloader)
-test_images, test_labels = dataiter.next()
-outputs = net(test_images)  # 查看网络预测效果
-_, predicted = torch.max(outputs, 1)
-print(predicted)
-print(test_labels)
+# 正式测试
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in testloader:
+        images, labels = data
+        outputs = net(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()  # 当标记的label种类和预测的种类一致时认为正确，并计数
+print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+# 结果打印：Accuracy of the network on the 10000 test images: 73 %
+########################################
+# 分别查看每个类的预测效果
+########################################
+class_correct = list(0. for i in range(10))
+class_total = list(0. for i in range(10))
+with torch.no_grad():
+    for data in testloader:
+        images, labels = data
+        outputs = net(images)
+        _, predicted = torch.max(outputs, 1)
+        c = (predicted == labels).squeeze()
+        for i in range(4):
+            label = labels[i]
+            class_correct[label] += c[i].item()
+            class_total[label] += 1
+for i in range(10):
+    print('Accuracy of %5s : %2d %%' % (
+        cifar10_classes[i], 100 * class_correct[i] / class_total[i]))
+# 结果打印：
+# Accuracy of plane : 85 %
+# Accuracy of car : 89 %
+# Accuracy of bird : 55 %
+# Accuracy of cat : 64 %
+# Accuracy of deer : 70 %
+# Accuracy of dog : 34 %
+# Accuracy of frog : 87 %
+# Accuracy of horse : 82 %
+# Accuracy of ship : 85 %
+# Accuracy of truck : 79 %

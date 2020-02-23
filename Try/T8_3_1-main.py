@@ -107,8 +107,7 @@ import os
 # y = net(x)
 # print(y.size())
 criterion = nn.CrossEntropyLoss()  # 定义损失函数：交叉熵
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-# 定义优化方法：随机梯度下降
+optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)# 定义优化方法：随机梯度下降
 ########################################
 # 第4步：卷积神经网络的训练
 ########################################
@@ -137,3 +136,16 @@ for epoch in range(5):  # 训练数据集的迭代次数，这里Cifar10数据�
         os.mkdir('checkpoint')
     torch.save(state, './checkpoint/cifar10_epoch_%d.ckpt' % (epoch + 1))
 print('Finished Training')
+
+########################################
+# 第5步：测试
+########################################
+checkpoint = torch.load('./checkpoint/cifar10_epoch_5.ckpt')  # 载入现有模型 ,目前只训练到cifar10_epoch_2.ckpt，正确率50%
+net.load_state_dict(checkpoint['net'])
+start_epoch = checkpoint['epoch']
+dataiter = iter(testloader)
+test_images, test_labels = dataiter.next()
+outputs = net(test_images)  # 查看网络预测效果
+_, predicted = torch.max(outputs, 1)
+print(predicted)
+print(test_labels)

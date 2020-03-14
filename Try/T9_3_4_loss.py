@@ -44,7 +44,7 @@ def buildConfTarget(config, confOut, target):
     confTarget = torch.LongTensor(batchSize, boxNumber, config.classNumber)
     confMasks = torch.ByteTensor(confOut.size())
     confMasks.zero_()
-    confScore = torch.nn.functional.log_softmax(Variable(confOut.view(-1, config.classNumber), requires_grad=False))
+    confScore = torch.nn.functional.log_softmax(Variable(confOut.view(-1, config.classNumber), requires_grad=False), dim=1)
     confScore = confScore.data.view(batchSize, boxNumber, config.classNumber)
     # positive samples
     pnum = 0
@@ -136,15 +136,15 @@ class EzDetectLoss(nn.Module):
         batchSize = target.size()[0]
         # building loss of conf
         confMasks, confTarget = buildConfTarget(self.config, confOut.data, target)
-        confSamples = confOut[confMasks].view(-1, self.config.classNumber)
-        confTarget = confTarget[confMasks].view(-1, self.config.classNumber)
+        confSamples = confOut[confMasks.bool()].view(-1, self.config.classNumber)
+        confTarget = confTarget[confMasks.bool()].view(-1, self.config.classNumber)
         confTarget = confTarget[:, 0].contiguous().view(-1)
         confTarget = Variable(confTarget, requires_grad=False)
         confLoss = self.confLoss(confSamples, confTarget)
         # building loss of bbox
         bboxMasks, bboxTarget = buildbboxTarget(self.config, bboxOut.data, target)
-        bboxSamples = bboxOut[bboxMasks].view(-1, 4)
-        bboxTarget = bboxTarget[bboxMasks].view(-1, 4)
+        bboxSamples = bboxOut[bboxMasks.bool()].view(-1, 4)
+        bboxTarget = bboxTarget[bboxMasks.bool()].view(-1, 4)
         bboxTarget = Variable(bboxTarget)
         bboxLoss = self.bboxLoss(bboxSamples, bboxTarget)
         return confLoss, bboxLoss

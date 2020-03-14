@@ -7,6 +7,8 @@ from torch.autograd import Function
 import torch.nn.functional as F
 import torchvision.models as models
 from Try.T9_3_5_sampling import buildPredBoxes
+import ssl
+
 
 # __all__ = ["EzDetectConfig", "EzDetectNet", "ReorgModule"]
 __all__ = ["EzDetectConfig", "EzDetectNet"]
@@ -52,6 +54,7 @@ class EzDetectNet(nn.Module):
     def __init__(self, config, pretrained=False):
         super(EzDetectNet, self).__init__()
         self.config = config
+        ssl._create_default_https_context = ssl._create_unverified_context
         resnet = models.resnet50(pretrained)  # 从PyTorch的预训练库中获取ResNet50模型，直接载入
         self.conv1 = resnet.conv1
         self.bn1 = resnet.bn1

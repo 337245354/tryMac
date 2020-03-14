@@ -19,13 +19,13 @@ parser.add_argument('--testBatchSize', type=int, default=4, help='testing batch 
 parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate. Default=0.01')
 parser.add_argument('--threads', type=int, default=4, help='number of threads for data loader to use')
 parser.add_argument('--seed', type=int, default=1024, help='random seed to use. Default=123')
-parser.add_argument('--gpu', dest='gpu', action='store_true')
-# parser.add_argument('--no-gpu', dest='gpu', action='store_false')
-parser.set_defaults(gpu=True)
+# parser.add_argument('--gpu', dest='gpu', action='store_true')
+parser.add_argument('--no-gpu', dest='gpu', action='store_false')
+# parser.set_defaults(gpu=True)
 opt = parser.parse_args()
-torch.cuda.set_device(1)
+# torch.cuda.set_device(1)
 print('===> Loading datasets')
-ezConfig = EzDetectConfig(opt.batchSize, opt.gpu)
+ezConfig = EzDetectConfig(opt.batchSize)
 train_set = DataSet(ezConfig, True)
 test_set = DataSet(ezConfig, False)
 train_data_loader = DataLoader(dataset=train_set,
@@ -65,7 +65,7 @@ def doTrain(t):
         confLoss, bboxLoss = myloss(confOut, bboxOut, target)
         totalLoss = confLoss * 4 + bboxLoss
         print(confLoss, bboxLoss)
-        print("{} : {} / {} >>>>>>>>>>>>>>>>>>>>>>>>: {}".format(t, i, len(train_data_loader), totalLoss.data[0]))
+        print("{} : {} / {} >>>>>>>>>>>>>>>>>>>>>>>>: {}".format(t, i, len(train_data_loader), totalLoss.data.item()))
         optimizer.zero_grad()
         totalLoss.backward()
         optimizer.step()
@@ -85,17 +85,17 @@ def doValidate():
         confLoss, bboxLoss = myloss(confOut, bboxOut, target)
         totalLoss = confLoss * 4 + bboxLoss
         print(confLoss, bboxLoss)
-        print("Test : {} / {} >>>>>>>>>>>>>>>>>>>>>>>>: {}".format(i, len(test_data_loader), totalLoss.data[0]))
-        lossSum = totalLoss.data[0] + lossSum
+        print("Test : {} / {} >>>>>>>>>>>>>>>>>>>>>>>>: {}".format(i, len(test_data_loader), totalLoss.data.item()))
+        lossSum = totalLoss.data.item() + lossSum
     score = lossSum / len(test_data_loader)
     print("########:{}".format(score))
     return score
 
 
 ####### main function ########
-for t in range(50):
+for t in range(10):
     adjust_learning_rate(optimizer, t)
     doTrain(t)
     score = doValidate()
-    if (t % 5 == 0):
-        torch.save(mymodel.state_dict(), "model/model_{}_{}.pth".format(t, str(score)[:4]))
+    if (t % 1 == 0):   # (t % 5 == 0)
+        torch.save(mymodel.state_dict(), "./model/model_{}_{}.pth".format(t, str(score)[:4]))

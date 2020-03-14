@@ -57,9 +57,9 @@ def sampleEzDetect(config, bboxes):  # 在voc_dataset.py的vocDataset类中用�
     for i in range(len(bboxes)):
         iouViewer = iouMatrix.view(-1)
         iouValues, iouSequence = torch.max(iouViewer, 0)
-        predIndex = iouSequence[0] // len(bboxes)
-        bboxIndex = iouSequence[0] % len(bboxes)
-        if (iouValues[0] > 0.1):
+        predIndex = iouSequence.item() // len(bboxes)
+        bboxIndex = iouSequence.item() % len(bboxes)
+        if (iouValues.item() > 0.1):
             selectedSamples[ii * 6 + 1] = bboxes[bboxIndex][0]
             selectedSamples[ii * 6 + 2] = bboxes[bboxIndex][1]
             selectedSamples[ii * 6 + 3] = bboxes[bboxIndex][2]
@@ -76,8 +76,8 @@ def sampleEzDetect(config, bboxes):  # 在voc_dataset.py的vocDataset类中用�
     for i in range(len(predBoxes)):
         v, _ = iouMatrix2[i].max(0)
         predIndex = i
-        bboxIndex = _[0]
-        if (v[0] > 0.7):  # anchor与真实值的IOU大于0.7的为正样本
+        bboxIndex = _.item()
+        if (v.item() > 0.7):  # anchor与真实值的IOU大于0.7的为正样本
             selectedSamples[ii * 6 + 1] = bboxes[bboxIndex][0]
             selectedSamples[ii * 6 + 2] = bboxes[bboxIndex][1]
             selectedSamples[ii * 6 + 3] = bboxes[bboxIndex][2]
@@ -85,7 +85,7 @@ def sampleEzDetect(config, bboxes):  # 在voc_dataset.py的vocDataset类中用�
             selectedSamples[ii * 6 + 5] = bboxes[bboxIndex][4]
             selectedSamples[ii * 6 + 6] = predIndex
             ii = ii + 1
-        elif (v[0] > 0.5):
+        elif (v.item() > 0.5):
             selectedSamples[ii * 6 + 1] = bboxes[bboxIndex][0] * -1
             selectedSamples[ii * 6 + 2] = bboxes[bboxIndex][1]
             selectedSamples[ii * 6 + 3] = bboxes[bboxIndex][2]

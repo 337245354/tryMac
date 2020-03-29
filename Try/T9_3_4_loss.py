@@ -7,7 +7,7 @@ from torch.autograd import Function
 import torch.nn.functional as F
 from Try.T9_3_5_bbox import bboxIOU, encodeBox
 
-__all__ = ["EzDetectLoss"]
+__all__ = ["EzDetectLoss", "buildbboxTarget", "buildConfTarget"]
 
 
 def buildbboxTarget(config, bboxOut, target):
@@ -43,7 +43,7 @@ def buildConfTarget(config, confOut, target):
     boxNumber = confOut.size()[1]
     confTarget = torch.LongTensor(batchSize, boxNumber, config.classNumber)
     confMasks = torch.ByteTensor(confOut.size())
-    confMasks.zero_()
+    confMasks.zero_() # 是否处理过,被选为正样本或负样本
     confScore = torch.nn.functional.log_softmax(Variable(confOut.view(-1, config.classNumber), requires_grad=False), dim=1)
     confScore = confScore.data.view(batchSize, boxNumber, config.classNumber)
     # positive samples
@@ -54,7 +54,7 @@ def buildConfTarget(config, confOut, target):
             offset = j * 6
             k = int(target[i][offset + 6])
             cls = int(target[i][offset + 1])
-            if cls > 0:
+            if cls > 0:  # 把正样本对应位置中如【0（batch号），9797（bbox number)）】的confMasks全设为1，confTarget全设为classNum
                 confMasks[i, k, :] = 1
                 confTarget[i, k, :] = cls
                 confScore[i, k, :] = 0
@@ -136,7 +136,7 @@ class EzDetectLoss(nn.Module):
         batchSize = target.size()[0]
         # building loss of conf
         confMasks, confTarget = buildConfTarget(self.config, confOut.data, target)
-        confSamples = confOut[confMasks.bool()].view(-1, self.config.classNumber)
+        confSamples = confOut[confMasks.bool()].view(-1, self.config.classNumber)  # 对于这200个正负样本的各个分类的可能性， confSamples.size() = 【200，21】
         confTarget = confTarget[confMasks.bool()].view(-1, self.config.classNumber)
         confTarget = confTarget[:, 0].contiguous().view(-1)
         confTarget = Variable(confTarget, requires_grad=False)

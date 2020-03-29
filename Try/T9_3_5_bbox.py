@@ -11,21 +11,21 @@ def doNMS(config, classMap, allBoxes, threshold):
     for c in range(1, config.classNumber):
         fscore = classMap[:, c]
         # print(fscore)
-        v, s = torch.sort(fscore, 0, descending=True)
-        print(">>>>>>>>>>>>>>>", c, v[0])
+        v, s = torch.sort(fscore, 0, descending=True)  #  v是最大值value, s是对应最大值的index
+        print(">>>>>>>>>>>>>>>", c, v[0])  # 输出每一种种类别最大可能性的概率
         for i in range(len(v)):
-            if (v[i] < threshold):
+            if (v[i] < threshold):  # 如果说当前分类的概率小于0.15，那就不管他了
                 continue
-        k = s[i]
-        boxA = [allBoxes[k, 0], allBoxes[k, 1], allBoxes[k, 2], allBoxes[k, 3]]
-        for j in range(i + 1, len(v)):
-            if (v[j] < threshold):
-                continue
-            k = s[j]
-            boxB = [allBoxes[k, 0], allBoxes[k, 1], allBoxes[k, 2], allBoxes[k, 3]]
-            iouValue = bboxIOU(boxA, boxB)
-            if (iouValue > 0.5):
-                v[j] = 0
+            k = s[i]  # 最大可能性的index
+            boxA = [allBoxes[k, 0], allBoxes[k, 1], allBoxes[k, 2], allBoxes[k, 3]]  # 最大可能性index的bbox
+            for j in range(i + 1, len(v)):  # 第二大可能性的内容，以及第三大，第四大...
+                if (v[j] < threshold):
+                    continue
+                k = s[j]
+                boxB = [allBoxes[k, 0], allBoxes[k, 1], allBoxes[k, 2], allBoxes[k, 3]]
+                iouValue = bboxIOU(boxA, boxB)
+                if (iouValue > 0.5):
+                    v[j] = 0  # 两个bbox在描述同一个东西，舍弃计算分类更加小的那个。
         for i in range(len(v)):
             if (v[i] < threshold):
                 continue
@@ -86,11 +86,11 @@ def decodeAllBox(config, allBox):
     return newBoxes
 
 def encodeBox(config, box, predBox):
-    pcx = (predBox[0] + predBox[2]) / 2
+    pcx = (predBox[0] + predBox[2]) / 2  # preBox的中心
     pcy = (predBox[1] + predBox[3]) / 2
-    pw = (predBox[2] - predBox[0])
+    pw = (predBox[2] - predBox[0])  # preBox的大小
     ph = (predBox[3] - predBox[1])
-    ecx = (box[0] + box[2]) / 2 - pcx
+    ecx = (box[0] + box[2]) / 2 - pcx  # trueBox的中心减preBox的中心
     ecy = (box[1] + box[3]) / 2 - pcy
     ecx = ecx / pw * 10
     ecy = ecy / ph * 10

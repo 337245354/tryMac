@@ -102,7 +102,7 @@ class vocDataset(data.Dataset):
                 bboxes.append(bbox)
         if len(bboxes) == 0:
             return self[index + 1]
-        target = sampleEzDetect(self.config, bboxes);
+        target = sampleEzDetect(self.config, bboxes); # target【0】显示出正样本的数目，target[1~6]分别是分类，四个bbox定位，以及这个anchor的index
         '''
         ###对预测图片进行测试##########
         draw = ImageDraw.Draw(img)

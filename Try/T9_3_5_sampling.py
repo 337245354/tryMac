@@ -60,12 +60,12 @@ def sampleEzDetect(config, bboxes):  # 在voc_dataset.py的vocDataset类中用�
         predIndex = iouSequence.item() // len(bboxes)
         bboxIndex = iouSequence.item() % len(bboxes)
         if (iouValues.item() > 0.1):
-            selectedSamples[ii * 6 + 1] = bboxes[bboxIndex][0]
-            selectedSamples[ii * 6 + 2] = bboxes[bboxIndex][1]
+            selectedSamples[ii * 6 + 1] = bboxes[bboxIndex][0]  # 分类
+            selectedSamples[ii * 6 + 2] = bboxes[bboxIndex][1]  # 四个位置
             selectedSamples[ii * 6 + 3] = bboxes[bboxIndex][2]
             selectedSamples[ii * 6 + 4] = bboxes[bboxIndex][3]
             selectedSamples[ii * 6 + 5] = bboxes[bboxIndex][4]
-            selectedSamples[ii * 6 + 6] = predIndex
+            selectedSamples[ii * 6 + 6] = predIndex  # 在anchor中的定位
             ii = ii + 1
         else:
             break

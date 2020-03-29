@@ -55,8 +55,8 @@ def adjust_learning_rate(optimizer, epoch):
 def doTrain(t):
     mymodel.train()
     for i, batch in enumerate(train_data_loader):
-        batchX = batch[0]
-        target = batch[1]
+        batchX = batch[0] # 包含了16个的batch，每个3通道，长宽各330
+        target = batch[1] # 包含了16个的target
         if ezConfig.gpu:
             batchX = batch[0].cuda()
             target = batch[1].cuda()

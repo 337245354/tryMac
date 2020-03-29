@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from Try.T9_3_3_model import EzDetectConfig
 from Try.T9_3_3_model import EzDetectNet
 from Try.T9_3_5_bbox import decodeAllBox, doNMS
+import numpy as np
 
 ezConfig = EzDetectConfig()
 ezConfig.batchSize = 1
@@ -16,7 +17,7 @@ mymodel.load_state_dict(torch.load(modelFile))
 print("finish load model")
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 transformer = transforms.Compose([transforms.ToTensor(), normalize])
-imgFile = "../ml/VOCdevkit/VOC2007/JPEGImages/000408.jpg"
+imgFile = "../ml/VOCdevkit/VOC2007/JPEGImages/000363.jpg"
 img = Image.open(imgFile)
 originImage = img
 img = img.resize((ezConfig.targetWidth, ezConfig.targetHeight), Image.BILINEAR)

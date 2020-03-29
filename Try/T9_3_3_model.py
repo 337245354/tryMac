@@ -14,6 +14,7 @@ import ssl
 __all__ = ["EzDetectConfig", "EzDetectNet"]
 
 
+# 生成10680个不同比例的anchor ,4个42^2,6个21^2,6个11^2,6个6^2,4个3^2
 class EzDetectConfig(object):
     def __init__(self, batchSize=4, gpu=False):
         super(EzDetectConfig, self).__init__()
@@ -93,7 +94,7 @@ class EzDetectNet(nn.Module):
     def forward(self, x):
         batchSize = x.size()[0]
         x = self.conv1(x)
-        x = self.bn1(x)
+        x = self.bn1(x) # 归一化
         x = self.relu(x)
         x = self.maxpool(x)
         x = self.layer1(x)
@@ -113,11 +114,11 @@ class EzDetectNet(nn.Module):
             loc = loc.view(batchSize, -1, 4)
             locs.append(loc)
             conf = self.confConvs[i](x)
-            conf = conf.permute(0, 2, 3, 1)
-            conf = conf.contiguous()
-            conf = conf.view(batchSize, -1, self.config.classNumber)
+            conf = conf.permute(0, 2, 3, 1) # 把原本size为（16，21，42，42）的数据转为（16，42，42，21），16是batchsize,21是21个分类，42*42是每一层的长*宽
+            conf = conf.contiguous() # 开辟新的内存空间
+            conf = conf.view(batchSize, -1, self.config.classNumber) # 把上面的conf转换成（16，42*42=1764，21）
             confs.append(conf)
         locResult = torch.cat(locs, 1)
-        confResult = torch.cat(confs, 1)
+        confResult = torch.cat(confs, 1) # 26个bbox的confs,4个42^2,6个21^2,6个11^2,6个6^2,4个3^2，拼接成10680个卷积核
         return confResult, locResult
 

@@ -14,7 +14,7 @@ from torch.nn import DataParallel, CrossEntropyLoss
 from torch.backends import cudnn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-import cfgs as cfg   # import cfgs.config as cfg
+import config as cfg   # import cfgs.config as cfg
 from Try.T10_1_unet import UNet
 
 
@@ -32,17 +32,17 @@ class Logger(object):
         self.log = open(logfile, "a")
 
 
-def write(self, message):
-    self.terminal.write(message)
-    self.log.write(message)
-    self.log.flush()
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
 
 
-def flush(self):
-    # this flush method is needed for python 3 compatibility.
-    # this handles the flush command by doing nothing.
-    # you might want to specify some extra behavior here.
-    pass
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
 
 
 class UNetTrainer(object):
@@ -63,8 +63,8 @@ class UNetTrainer(object):
             self.net.load_state_dict(checkpoint['state_dir'])
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
-        self.net.cuda()
-        self.loss.cuda()
+        # self.net.cuda()
+        # self.loss.cuda()
         if devices_num == 2:
             self.net = DataParallel(self.net, device_ids=[0, 1])
         # self.loss = DataParallel(self.loss, device_ids=[0, 1])
@@ -97,6 +97,8 @@ class UNetTrainer(object):
             data_t, target_t = data, target
             # data = Variable(data.cuda(async = True))
             # target = Variable(target.cuda(async = True))
+            data = Variable(data)
+            target = Variable(target)
             output = self.net(data)  # UNet输出结果
             output = output.transpose(1, 3).transpose(1, 2).contiguous().view(-1, self.num_classes)
             target = target.view(-1)
@@ -104,8 +106,8 @@ class UNetTrainer(object):
             optimizer.zero_grad()
             loss_output.backward()  # 反向传播Loss
             optimizer.step()
-            loss_output = loss_output.data[0]  # Loss数值
-            acc = self.accuracy(output, target)
+            loss_output = loss_output.data.item()  # Loss数值
+            acc = accuracy(output, target)
             metrics.append([loss_output, acc])
             if i == 0:
                 batch_size = data.size(0)
@@ -122,7 +124,7 @@ class UNetTrainer(object):
                 #    show_list.append(output[j].float())
                 #
                 # t = torch.cat(show_list, 0)
-                torchvision.utils.save_image(t, "temp_image/%02d_train.jpg" % epoch, nrow=3)
+                torchvision.utils.save_image(t, "../Try/temp/%02d_train.jpg" % epoch, nrow=3)
             # if i == 20:
             # break
         if epoch % save_freq == 0:
@@ -145,16 +147,18 @@ class UNetTrainer(object):
         start_time = time.time()
         self.net.eval()
         metrics = []
-        for i, (data, target) in enumerate(data_loader):
+        for i, (data, target) in enumerate(tqdm(data_loader)):
             data_t, target_t = data, target
             # data = Variable(data.cuda(async = True), volatile = True)
             # target = Variable(target.cuda(async = True), volatile = True)
+            data = Variable(data, requires_grad=False)
+            target = Variable(target, requires_grad=False)
             output = self.net(data)
             output = output.transpose(1, 3).transpose(1, 2).contiguous().view(-1, self.num_classes)
             target = target.view(-1)
             loss_output = self.loss(output, target)
-            loss_output = loss_output.data[0]
-            acc = self.accuracy(output, target)
+            loss_output = loss_output.data.item()
+            acc = accuracy(output, target)
             metrics.append([loss_output, acc])
             if i == 0:
                 batch_size = data.size(0)
@@ -170,7 +174,7 @@ class UNetTrainer(object):
                 #   show_list.append(output[j].float())
                 #
                 # t = torch.cat(show_list, 0)
-                torchvision.utils.save_image(t, "temp_image/%02d_val.jpg" % epoch, nrow=3)
+                torchvision.utils.save_image(t, "../Try/temp/%02d_train.jpg" % epoch, nrow=3)
             # if i == 10:
             #   break
         end_time = time.time()
@@ -181,13 +185,11 @@ class UNetTrainer(object):
         """metrics: [loss, acc]
         """
         if epoch != -1:
-            print
-            "Epoch: {}".format(epoch),
-        print
-        phase,
+            print("Epoch: {}".format(epoch),)
+        print(phase,)
         print('loss %2.4f, accuracy %2.4f, time %2.2f' % (np.mean(metrics[:, 0]), np.mean(metrics[:, 1]), time))
         if phase != 'Train':
-            print
+            print()
 
     def get_lr(self, epoch):
         if epoch <= self.epochs * 0.5:
@@ -216,10 +218,12 @@ class UNetTrainer(object):
         # cfgs dir
         shutil.copytree('./cfgs', os.path.join(self.save_dir, 'cfgs'))
 
-    def accuracy(output, target):
-        _, pred = output.max(dim=1)
-        correct = pred.eq(target)
-        return correct.float().sum().data[0] / target.size(0)
+
+def accuracy(output, target):
+    _, pred = output.max(dim=1)
+    correct = pred.eq(target)
+    return correct.float().sum().data.item() / target.size(0)
+
 
 class UNetTester(object):
     def __init__(self, model, devices_num=2, color_dim=1, num_classes=2):
@@ -236,8 +240,7 @@ class UNetTester(object):
     def test(self, folder, target_dir):
         mkdir(target_dir)
         cracks_files = glob.glob(os.path.join(folder, "*.jpg"))
-        print
-        len(cracks_files), "imgs."
+        print(len(cracks_files), "imgs.")
         for crack_file in tqdm(cracks_files):
             name = os.path.basename(crack_file)
             save_path = os.path.join(target_dir, name)
@@ -265,7 +268,7 @@ class UNetTester(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='crack segment')
-    parser.add_argument('--train', '-t', help='train data dir', default='')
+    parser.add_argument('--train', '-t', help='train data dir', default='../ml/CrackForest-dataset-master/image/')
     parser.add_argument('--resume', '-r', help='the resume model path', default='')
     parser.add_argument('--wd', help='weight decay', type=float, default=1e-4)
     parser.add_argument('--name', help='the name of the model', default='crack_segment')
@@ -273,10 +276,10 @@ if __name__ == '__main__':
                         type=int)
     parser.add_argument('--test', help='test data dir', default='')
     parser.add_argument('--model', help='crack segment model path', default='')
-    parser.add_argument('--target', help='target data dir', default='')
+    parser.add_argument('--target', help='target data dir', default='../ml/CrackForest-dataset-master/groundTruthJPG/')
     args = parser.parse_args()
     if args.train:
-        masks = glob.glob(os.path.join(args.train, 'mask/*.jpg'))
+        masks = glob.glob(os.path.join(args.train, '*.jpg'))
         masks.sort()
         N = len(masks)
         train_N = int(N * 0.8)
@@ -287,10 +290,12 @@ if __name__ == '__main__':
                                 batch_size=8, shuffle=True,
                                 num_workers=32, pin_memory=True)
         crack_segmentor = UNetTrainer(save_dir=args.name, resume=args.resume,
-                                      devices_num=cfg.devices_num)
+                                      devices_num=0)
+        #                             devices_num = cfg.devices_num)
         crack_segmentor.train(train_loader, val_loader, weight_decay=args.wd)
     if args.test:
         assert args.target, "target path must not be None."
         assert args.target, "model path must not be None."
-        crack_segmentor = UNetTester(args.model, devices_num=cfg.devices_num)
+        crack_segmentor = UNetTester(args.model, devices_num=0)
+        #   crack_segmentor = UNetTester(args.model, devices_num=cfg.devices_num)
         crack_segmentor.test(args.test, args.target)

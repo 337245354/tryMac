@@ -232,7 +232,7 @@ class UNetTester(object):
         self.color_dim = color_dim
         self.num_classes = num_classes
         self.net.load_state_dict(checkpoint['state_dir'])
-        self.net = self.net.cuda()
+        # self.net = self.net.cuda()
         if devices_num == 2:
             self.net = DataParallel(self.net, device_ids=[0, 1])
         self.net.eval()
@@ -255,7 +255,7 @@ class UNetTester(object):
         input = torch.from_numpy(data)
         height = input.size()[-2]
         width = input.size()[-1]
-        input = Variable(input, volatile=True).cuda()
+        input = Variable(input, requires_grad=False)#.cuda()
         batch_size = 1
         output = self.net(input)
         output = output.transpose(1, 3).transpose(1, 2).contiguous().view(-1, self.num_classes)
@@ -269,14 +269,14 @@ class UNetTester(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='crack segment')
     parser.add_argument('--train', '-t', help='train data dir', default='../ml/CrackForest-dataset-master/image/')
-    parser.add_argument('--resume', '-r', help='the resume model path', default='')
+    parser.add_argument('--resume', '-r', help='the resume model path', default='../models/crack_segment/060.ckpt')
     parser.add_argument('--wd', help='weight decay', type=float, default=1e-4)
     parser.add_argument('--name', help='the name of the model', default='crack_segment')
     parser.add_argument('--sfreq', metavar='SF', default=10, help='model save frequency',
                         type=int)
-    parser.add_argument('--test', help='test data dir', default='')
-    parser.add_argument('--model', help='crack segment model path', default='')
-    parser.add_argument('--target', help='target data dir', default='../ml/CrackForest-dataset-master/groundTruthJPG/')
+    parser.add_argument('--test', help='test data dir', default='../ml/CrackForest-dataset-master/image/')
+    parser.add_argument('--model', help='crack segment model path', default='../models/crack_segment/060.ckpt')
+    parser.add_argument('--target', help='target data dir', default='../ml/CrackForest-dataset-master/result/')
     args = parser.parse_args()
     if args.train:
         masks = glob.glob(os.path.join(args.train, '*.jpg'))

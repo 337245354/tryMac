@@ -87,7 +87,7 @@ class UNet(nn.Module):
         self.output = post_block(num_classes)
 
     def forward(self, x):
-        c0 = self.input(x)  # (1L, 16L, 512L, 512L)
+        c0 = self.input(x)  # (1L, 16L, 512L, 512L) , c0.size() = [8,4,320,480] ,8张图一个batch, output是4层，大小为320*480，颜色只有一个色道）
         c1 = self.con1(c0)  # (1L, 32L, 256L, 256L)
         c2 = self.con2(c1)  # (1L, 64L, 128L, 128L)
         c3 = self.con3(c2)  # (1L, 128L, 64L, 64L)
@@ -109,7 +109,7 @@ class UNet(nn.Module):
         print 'u2 : ', u2.size()
         print 'u1 : ', u1.size()
         print 'u0 : ', u0.size()"""
-        output = self.output(u0_c0)
+        output = self.output(u0_c0)  # output.size() = [8,2,320,480]
         return output
 
 

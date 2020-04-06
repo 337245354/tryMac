@@ -111,7 +111,7 @@ class UNetTrainer(object):
             metrics.append([loss_output, acc])
             if i == 0:
                 batch_size = data.size(0)
-                _, output = output.data.max(dim=1)
+                _, output = output.data.max(dim=1)  #  _为最大值，output 为output.data.max(按行)的最大值的索引，如果为0 ，则第一层的卷积出来的数大，反之为第二层
                 output = output.view(batch_size, 1, 1, 320, 480).cpu()  # 预测结果图
                 data_t = data_t[0, 0].unsqueeze(0).unsqueeze(0)  # 原img图
                 target_t = target_t[0].unsqueeze(0)  # gt图
@@ -268,18 +268,18 @@ class UNetTester(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='crack segment')
-    parser.add_argument('--train', '-t', help='train data dir', default='../ml/CrackForest-dataset-master/image/')
-    parser.add_argument('--resume', '-r', help='the resume model path', default='../models/crack_segment/060.ckpt')
+    parser.add_argument('--train', '-t', help='train data dir', default='../ml/CrackForest-dataset-master/')
+    parser.add_argument('--resume', '-r', help='the resume model path', default='../models/crack_segment/140.ckpt')
     parser.add_argument('--wd', help='weight decay', type=float, default=1e-4)
     parser.add_argument('--name', help='the name of the model', default='crack_segment')
     parser.add_argument('--sfreq', metavar='SF', default=10, help='model save frequency',
                         type=int)
     parser.add_argument('--test', help='test data dir', default='../ml/CrackForest-dataset-master/image/')
-    parser.add_argument('--model', help='crack segment model path', default='../models/crack_segment/060.ckpt')
+    parser.add_argument('--model', help='crack segment model path', default='../models/crack_segment/140.ckpt')
     parser.add_argument('--target', help='target data dir', default='../ml/CrackForest-dataset-master/result/')
     args = parser.parse_args()
     if args.train:
-        masks = glob.glob(os.path.join(args.train, '*.jpg'))
+        masks = glob.glob(os.path.join(args.train, 'mask/*.jpg'))
         masks.sort()
         N = len(masks)
         train_N = int(N * 0.8)

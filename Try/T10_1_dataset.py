@@ -45,14 +45,14 @@ class UNetDataset(Dataset):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='create dataset')
     parser.add_argument('--images', '-l', help='images dir', default='../ml/CrackForest-dataset-master/image')
-    parser.add_argument('--masks', '-m', help='masks dir', default='../ml/CrackForest-dataset-master/groundTruthJPG')
+    parser.add_argument('--masks', '-m', help='masks dir', default='../ml/CrackForest-dataset-master/mask')
     parser.add_argument('--target', '-t', help='target dir', default='')
     args = parser.parse_args()
     if not args.target:
         from torch.utils.data import DataLoader
         import torchvision
 
-        mask_list = glob.glob('../ml/CrackForest-dataset-master/groundTruthJPG/*.jpg')
+        mask_list = glob.glob('../ml/CrackForest-dataset-master/mask/*.jpg')
         dataset = UNetDataset(mask_list=mask_list, phase='train')
         data_loader = DataLoader(
             dataset,

@@ -63,7 +63,7 @@ for each_mat in path:
     #     fea_spa_1 = fea_spa
         print('i=',i)
         fea_spa_image = MatrixToImage(fea_spa_1)# 调用函数
-        path = '../ml/CrackForest-dataset-master/groundTruthJPG/'#+first_name+'/'
+        path = '../ml/CrackForest-dataset-master/mask/'  #+first_name+'/'
         if os.path.exists(path) is False:
             os.makedirs(path)
         fea_spa_image.save(path+first_name+'.jpg')# 保存图片

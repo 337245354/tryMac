@@ -57,6 +57,7 @@ plt.axis("off")
 plt.title("Training Images")
 plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(), (1, 2, 0)))
 
+
 # T11_3_2
 # 网络设置
 def weights_init(m):
@@ -67,162 +68,170 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
+
 # T11_3_3
-#构建产生网络的代码
+# 构建产生网络的代码
 class Generator(nn.Module):
     def __init__(self, ngpu):
         super(Generator, self).__init__()
         self.ngpu = ngpu
         self.main = nn.Sequential(
-            #输入向量z，通过第一个反卷积
-            #将100的向量z输入，输出channel设置为(ngf*8)，经过如下操作
+            # 输入向量z，通过第一个反卷积
+            # 将100的向量z输入，输出channel设置为(ngf*8)，经过如下操作
             # class torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1)
-            #后得到(ngf*8) * 4 * 4，即长宽为4，channel为ngf*8的特征层
-            nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
-                #这里的Conv-Transpose2d类似于deconv，前面第10章已介绍过其原理
+            # 后得到(ngf*8) * 4 * 4，即长宽为4，channel为ngf*8的特征层
+            nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False),
+            # 这里的Conv-Transpose2d类似于deconv，前面第10章已介绍过其原理
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(True),
-            #继续对特征层进行反卷积操作，得到长宽为8，channel为ngf*4的特征层 (ngf*4) * 8 * 8
+            # 继续对特征层进行反卷积操作，得到长宽为8，channel为ngf*4的特征层 (ngf*4) * 8 * 8
             nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 4),
             nn.ReLU(True),
-            #继续对特征层进行反卷积操作，得到长宽为16，channel为ngf*2的特征层 (ngf*2) * 16 * 16
-            nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            # 继续对特征层进行反卷积操作，得到长宽为16，channel为ngf*2的特征层 (ngf*2) * 16 * 16
+            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 2),
             nn.ReLU(True),
-            #继续对特征层进行反卷积操作，得到长宽为32，channel为ngf的特征层 (ngf) * 32 * 32
-            nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
+            # 继续对特征层进行反卷积操作，得到长宽为32，channel为ngf的特征层 (ngf) * 32 * 32
+            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf),
             nn.ReLU(True),
-            #继续对特征层进行反卷积操作，得到长宽为64，channel为nc的特征层 (nc) * 64 * 64
-            nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
+            # 继续对特征层进行反卷积操作，得到长宽为64，channel为nc的特征层 (nc) * 64 * 64
+            nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),
             nn.Tanh()
         )
+
     def forward(self, input):
         return self.main(input)
+
+
 ################################################################
 ####将产生网络实例化####
-#创建生成器
+# 创建生成器
 netG = Generator(ngpu).to(device)
-#处理多GPU情况
+# 处理多GPU情况
 if (device.type == 'cuda') and (ngpu > 1):
     netG = nn.DataParallel(netG, list(range(ngpu)))
-#应用weights_init函数对随机初始化进行重置，改为服从mean=0, stdev=0.2的正态分布的初始化
+# 应用weights_init函数对随机初始化进行重置，改为服从mean=0, stdev=0.2的正态分布的初始化
 netG.apply(weights_init)
 
+
 # T11_3_4
-#判别网络的代码
+# 判别网络的代码
 class Discriminator(nn.Module):
     def __init__(self, ngpu):
         super(Discriminator, self).__init__()
         self.ngpu = ngpu
         self.main = nn.Sequential(
-            #输入为一张宽高均为64，channel为nc的一张图片，得到宽高均为32，channel为ndf的一张图片 (ndf) * 32 * 32
+            # 输入为一张宽高均为64，channel为nc的一张图片，得到宽高均为32，channel为ndf的一张图片 (ndf) * 32 * 32
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            #经过第2次卷积操作后得到宽高均为16，channel为ndf*2的一张图片(ndf*2) * 16 * 16
+            # 经过第2次卷积操作后得到宽高均为16，channel为ndf*2的一张图片(ndf*2) * 16 * 16
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 2), #使用大尺度的步长来代替采样（pooling），这样可以更好地学习降采样的方法
+            nn.BatchNorm2d(ndf * 2),  # 使用大尺度的步长来代替采样（pooling），这样可以更好地学习降采样的方法
             nn.LeakyReLU(0.2, inplace=True),
-            #经过第3次卷积操作后得到宽高均为8，channel为ndf*4的一张图片 (ndf*4) * 8 * 8
+            # 经过第3次卷积操作后得到宽高均为8，channel为ndf*4的一张图片 (ndf*4) * 8 * 8
             nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 4),
             nn.LeakyReLU(0.2, inplace=True),
-            #经过第4次卷积操作后得到宽高均为4，channel为ndf*8的一张图片 (ndf*8) * 4 * 4
+            # 经过第4次卷积操作后得到宽高均为4，channel为ndf*8的一张图片 (ndf*8) * 4 * 4
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 8),
             nn.LeakyReLU(0.2, inplace=True),
-            #经过第5次卷积并过Sigmoid层，最终得到一个概率输出值
+            # 经过第5次卷积并过Sigmoid层，最终得到一个概率输出值
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
-            nn.Sigmoid() #最终通过Sigmoid激活函数输出该张图片是真实图片的概率
+            nn.Sigmoid()  # 最终通过Sigmoid激活函数输出该张图片是真实图片的概率
         )
+
     def forward(self, input):
         return self.main(input)
+
+
 ####将判别网络实例化####
-#创建判别器
+# 创建判别器
 netD = Discriminator(ngpu).to(device)
-#处理多GPU情况
+# 处理多GPU情况
 if (device.type == 'cuda') and (ngpu > 1):
     netD = nn.DataParallel(netD, list(range(ngpu)))
-#应用weights_init函数对随机初始化进行重置，改为服从mean=0, stdev=0.2的正态分布的初始化
+# 应用weights_init函数对随机初始化进行重置，改为服从mean=0, stdev=0.2的正态分布的初始化
 netD.apply(weights_init)
 
 # T11_3_5
-#初始化二元交叉熵损失函数
+# 初始化二元交叉熵损失函数
 criterion = nn.BCELoss()
-#创建一个batch大小的向量z，即产生网络的输入数据
+# 创建一个batch大小的向量z，即产生网络的输入数据
 fixed_noise = torch.randn(64, nz, 1, 1, device=device)
-#定义训练过程的真图片/假图片的标签
+# 定义训练过程的真图片/假图片的标签
 real_label = 1
 fake_label = 0
-#为产生网络和判别网络设置Adam优化器
+# 为产生网络和判别网络设置Adam优化器
 optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
 # T11_3_6
-#训练过程：主循环
+# 训练过程：主循环
 img_list = []
 G_losses = []
 D_losses = []
 iters = 0
 print("Starting Training Loop...")
-for epoch in range(num_epochs): #训练集迭代的次数
-    for i, data in enumerate(dataloader, 0): #循环每个dataloader中的batch
+for epoch in range(num_epochs):  # 训练集迭代的次数
+    for i, data in enumerate(dataloader, 0):  # 循环每个dataloader中的batch
         ############################
         # 1)更新判别网络：最大化log(D(x)) + log(1 - D(G(z)))
         ###########################
         ##用全部都是真图片的batch进行训练
         netD.zero_grad()
-        #格式化batch
+        # 格式化batch
         real_cpu = data[0].to(device)
         b_size = real_cpu.size(0)
         label = torch.full((b_size,), real_label, device=device)
-        #将带有正样本的batch输入到判别网络中进行前向计算，得到的结果将放到变量output中
+        # 将带有正样本的batch输入到判别网络中进行前向计算，得到的结果将放到变量output中
         output = netD(real_cpu).view(-1)
-        #计算Loss
+        # 计算Loss
         errD_real = criterion(output, label)
-        #计算梯度
+        # 计算梯度
         errD_real.backward()
         D_x = output.mean().item()
-        ##用全部都是假图片的batch进行训练
-        #产生网络的输入向量
+        # 用全部都是假图片的batch进行训练
+        # 产生网络的输入向量
         noise = torch.randn(b_size, nz, 1, 1, device=device)
-        #通过产生网络生成假的样本图片
+        # 通过产生网络生成假的样本图片
         fake = netG(noise)
         label.fill_(fake_label)
-        #将生成的全部假图片输入到判别网络中进行前向计算，将得到的结果放到变量output中
+        # 将生成的全部假图片输入到判别网络中进行前向计算，将得到的结果放到变量output中
         output = netD(fake.detach()).view(-1)
-        #在假图片batch中计算上述判别网络的Loss
+        # 在假图片batch中计算上述判别网络的Loss
         errD_fake = criterion(output, label)
-        #计算该batch的梯度
+        # 计算该batch的梯度
         errD_fake.backward()
         D_G_z1 = output.mean().item()
-        #将真图片与假图片的误差加和
+        # 将真图片与假图片的误差加和
         errD = errD_real + errD_fake
-        #更新判别网络D
+        # 更新判别网络D
         optimizerD.step()
         ############################
         # 2)更新产生网络：最大化log(D(G(z)))
         ###########################
         netG.zero_grad()
-        label.fill_(real_label) #产生网络的标签是真实的图片
-        #由于刚刚更新了判别网络，这里让假数据再过一遍判别网络，用来计算产生网络的Loss并回传
+        label.fill_(real_label)  # 产生网络的标签是真实的图片
+        # 由于刚刚更新了判别网络，这里让假数据再过一遍判别网络，用来计算产生网络的Loss并回传
         output = netD(fake).view(-1)
         errG = criterion(output, label)
         errG.backward()
         D_G_z2 = output.mean().item()
-        #更新产生网络G
+        # 更新产生网络G
         optimizerG.step()
-        #打印训练状态
+        # 打印训练状态
         if i % 50 == 0:
             print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                % (epoch, num_epochs, i, len(dataloader),
-                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-        #保存Loss，用于后续画图
+                  % (epoch, num_epochs, i, len(dataloader),
+                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+        # 保存Loss，用于后续画图
         G_losses.append(errG.item())
         D_losses.append(errD.item())
-        #保留产生网络生成的图片，后续用来查看生成的图片效果
-        if (iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+        # 保留产生网络生成的图片，后续用来查看生成的图片效果
+        if (iters % 500 == 0) or ((epoch == num_epochs - 1) and (i == len(dataloader) - 1)):
             with torch.no_grad():
                 fake = netG(fixed_noise).detach().cpu()
             img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
@@ -230,27 +239,26 @@ for epoch in range(num_epochs): #训练集迭代的次数
 
 # T11_3_7
 #####查看网络Loss的变化#####
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(10, 5))
 plt.title("Generator and Discriminator Loss During Training")
-plt.plot(G_losses,label="G") #画出产生网络Loss的变化
-plt.plot(D_losses,label="D") #画出判别网络Loss的变化
+plt.plot(G_losses, label="G")  # 画出产生网络Loss的变化
+plt.plot(D_losses, label="D")  # 画出判别网络Loss的变化
 plt.xlabel("iterations")
 plt.ylabel("Loss")
 plt.legend()
 plt.show()
 
-
 ####对比真实图片和产生的假图片####
-real_batch = next(iter(dataloader)) #从dataloader中取一个batch（64个）的图片
-#画真实的图片
-plt.figure(figsize=(15,15))
-plt.subplot(1,2,1)
+real_batch = next(iter(dataloader))  # 从dataloader中取一个batch（64个）的图片
+# 画真实的图片
+plt.figure(figsize=(15, 15))
+plt.subplot(1, 2, 1)
 plt.axis("off")
 plt.title("Real Images")
-plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(),(1,2,0)))
-#画出产生网络最后一个迭代产生的图片
-plt.subplot(1,2,2)
+plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
+# 画出产生网络最后一个迭代产生的图片
+plt.subplot(1, 2, 2)
 plt.axis("off")
 plt.title("Fake Images")
-plt.imshow(np.transpose(img_list[-1],(1,2,0)))
+plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
 plt.show()

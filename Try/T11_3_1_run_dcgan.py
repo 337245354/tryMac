@@ -62,7 +62,7 @@ plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=
 # 网络设置
 def weights_init(m):
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    if classname.find('Conv') != -1:  # 如果存在该网络层
         nn.init.normal_(m.weight.data, 0.0, 0.02)
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
@@ -183,7 +183,7 @@ for epoch in range(num_epochs):  # 训练集迭代的次数
         ##用全部都是真图片的batch进行训练
         netD.zero_grad()
         # 格式化batch
-        real_cpu = data[0].to(device)
+        real_cpu = data[0].to(device)  # 128张3*64*64的图片
         b_size = real_cpu.size(0)
         label = torch.full((b_size,), real_label, device=device)
         # 将带有正样本的batch输入到判别网络中进行前向计算，得到的结果将放到变量output中
@@ -200,7 +200,7 @@ for epoch in range(num_epochs):  # 训练集迭代的次数
         fake = netG(noise)
         label.fill_(fake_label)
         # 将生成的全部假图片输入到判别网络中进行前向计算，将得到的结果放到变量output中
-        output = netD(fake.detach()).view(-1)
+        output = netD(fake.detach()).view(-1)   # .detach_()用于切断反向传播
         # 在假图片batch中计算上述判别网络的Loss
         errD_fake = criterion(output, label)
         # 计算该batch的梯度

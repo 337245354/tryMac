@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms  # 将PIL图片格式转换为向量（tensor）格式
 import torchvision.models as models  # 训练/载入预训练模型
 import copy  # 用于复制模型
+import ssl
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # 如果有cuda则使用GPU，否则使用CPU
@@ -20,13 +21,13 @@ loader = transforms.Compose([
 
 
 def image_loader(image_name):
-    image = Image.open(image_name)
+    image = Image.open(image_name).convert("RGB")
     image = loader(image).unsqueeze(0)
     return image.to(device, torch.float)
 
 
-style_img = image_loader("images/neural-style/style_sketch.jpg")  # 载入1张风格图片
-content_img = image_loader("images/neural-style/content_person.jpg")  # 载入1张内容图片
+style_img = image_loader("../ml/style_change/e.png")  # 载入1张风格图片
+content_img = image_loader("../ml/style_change/f.png")  # 载入1张内容图片
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
 
@@ -86,6 +87,7 @@ class StyleLoss(nn.Module):
 # 载入用ImageNet预训练好的VGG19模型，并只使用features模块
 # 注：PyTorch将VGG模型分为2个模块，features模块和classifier模块，其中features模块包含卷积和池化层，classifier模块包含全连接和分类层。
 # 一些层在训练和预测（评估）时网络的行为（参数）是不同的，注意这里需要使用eval()
+ssl._create_default_https_context = ssl._create_unverified_context
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 # VGG网络是用均值[0.485, 0.456, 0.406]，方差[0.229, 0.224, 0.225]对图片进行归一化之后再进行训练的，所以这里也需要对图片进行归一化操作
 cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
@@ -96,8 +98,8 @@ class Normalization(nn.Module):
     def __init__(self, mean, std):
         super(Normalization, self).__init__()
         # 下面两个操作是将数据转换成[BatchSize x Channel x Hight x Weight]格式
-        self.mean = torch.tensor(mean).view(-1, 1, 1)
-        self.std = torch.tensor(std).view(-1, 1, 1)
+        self.mean = torch.tensor(mean).view(1, -1, 1, 1)
+        self.std = torch.tensor(std).view(1, -1, 1, 1)
 
     def forward(self, img):
         # normalize img

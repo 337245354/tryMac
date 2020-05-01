@@ -215,9 +215,9 @@ for epoch in range(num_epochs):  # 训练集迭代的次数
         ###########################
         netG.zero_grad()
         label.fill_(real_label)  # 产生网络的标签是真实的图片
-        # 由于刚刚更新了判别网络，这里让假数据再过一遍判别网络，用来计算产生网络的Loss并回传
+        # 由于刚刚更新了判别网络，这里让假数据再过一遍判别网络，用来计算产生网络的Loss并回传给生成网络
         output = netD(fake).view(-1)
-        errG = criterion(output, label)
+        errG = criterion(output, label)  # https://www.jianshu.com/p/998cf8e52209
         errG.backward()
         D_G_z2 = output.mean().item()
         # 更新产生网络G
